@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from models.user import User, db
-from flask_login import login_user, logout_user, login_required
+from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+
 
 auth = Blueprint('auth', __name__)
 
@@ -35,5 +36,7 @@ def register():
 @auth.route('/logout')
 @login_required
 def logout():
+    current_user.recent_page = request.referrer  # หรือใส่จาก session
+    db.session.commit()
     logout_user()
     return redirect(url_for('auth.login'))

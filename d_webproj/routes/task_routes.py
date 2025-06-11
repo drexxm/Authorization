@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, abort
 from models.task import Task, db
 from flask_login import current_user, login_required
+import json
 
 task_bp = Blueprint('task_bp', __name__)
 
@@ -53,11 +54,11 @@ def delete(id):
 @task_bp.route('/dashboard')
 @login_required
 def dashboard():
+    perms = json.loads(current_user.permissions or '{}')
+    if not perms.get('dashboard', False):
+        abort(403)   
     tasks = Task.query.filter_by(user_id=current_user.id).all()
-    # total = Task.query.count() --> chg to
     total = len(tasks)
-    # completed = Task.query.filter_by(status='completed').count()
-    # pending = Task.query.filter_by(status='pending').count()
     completed = sum(1 for t in tasks if t.status == 'completed')
     pending = total - completed
     return render_template('dashboard.html', total=total, completed=completed, pending=pending)
